@@ -441,6 +441,7 @@ server1을 이용하여 각 컴퓨터를 셋팅 한다.
   > 없어서 파일 새로 만든것 
   >
   > 밑에는 이 파일에 덧붙일 내용
+- cp -r mariadb-java-client-1.3.5.jar /usr/local/hive/lib
 
 ***
 
@@ -492,3 +493,90 @@ server1을 이용하여 각 컴퓨터를 셋팅 한다.
 6. hadoop dfs -chmod 777 /user/hive/warehouse
 
 - start-all.sh로 하둡을 실행해 준 후 hive로 로그인
+
+- xml 파일 수정 후 하둡에 hive가 쓸 공간을 마련해준다.
+
+1. cd /usr/local/hive/conf
+2. hadoop dfs -mkdir /tmp
+3. hadoop dfs -mkdir /tmp/hive
+4. hadoop dfs -chmod 777 /tmp
+5. hadoop dfs -mkdir /user/hive/warehouse
+6. hadoop dfs -chmod 777 /user/hive/warehouse
+
+- start-all.sh로 하둡을 실행해 준 후 hive로 로그인
+
+> CREATE TABLE HDI(id INT, country STRING, hdi FLOAT, lifeex INT, mysch INT, 
+>
+> eysch INT, gni INT) ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' STORED AS TEXTFILE;
+
+- MariaDB에서 hive_db 이용
+
+> select * from TBLS;
+>
+> > 테이블이 만들어진 것을 확인할 수 있음.
+
+- hdi 예제 데이터 파일 이용
+
+> 엑셀 파일 형식 => CSV
+
+- mv hdi.csv hdi.txt
+
+> 이름 바꿔줌
+
+- hive 로 로그인한 sql 에서
+
+> load data local inpath '/root/다운로드/hdi.txt' into table HDI;
+>
+> > (mysql은 구조만,, 실제 데이터는 하둡에 들어가는 것)
+
+- select * from hdi limit 5;(5번 미만의 데이터 출력)
+
+> 맵리듀스 형식으로 출력되는 것.
+
+- describe hdi;
+
+  > 각 테이블 변수의 종류를 보여줌
+  >
+  > +++ 예문
+  >
+  > select sum(hdi) from hdi;
+
+- hive --service hiveserver2
+
+  > hive가 대기하도록 리눅스 서버를 두고, 
+  >
+  > 이클립스에서 java project, java class 생성 후 
+  >
+  > 실행을 통해 데이터를 요청한다.
+
+- ```java
+  public static void main(String[] args) throws Exception {
+  		
+  	Class.forName("org.apache.hive.jdbc.HiveDriver");
+  	Connection conn = DriverManager.getConnection
+  	("jdbc:hive2://192.168.112.201:10000/default","root","111111");
+  	Statement stmt = conn.createStatement();
+  	ResultSet rs = stmt.executeQuery("SELECT sum(hdi) FROM HDI");
+  		while(rs.next()) {
+  		     System.out.println(rs.getString(1));
+  		   }
+  		conn.close();
+  		System.out.println("Success....");
+  
+  	}
+  ```
+
+
+
+#### hive  연습하기
+
+- hadoophive
+
+- 192.168.112.220
+
+  1. JDK 설치
+  2. Hadoop 설치
+  3. mariaDB 설치
+  4. hive 설치
+
+  hdi 데이터를 Java Application으로 분석 조회하기
