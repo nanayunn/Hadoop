@@ -338,5 +338,157 @@ data2					-datanode -204
     > - Jps
     > -  JobTracker
     > - NameNode
-    >   
-    >   
+ 1. hadoopserver2, data1, data2 에서 jps 실행시에 잘 작동되려면
+
+   > systemctl stop firewalld
+   >
+   > systemctl disable firewalld
+   >
+   > > 방화벽 설정 해주기
+
+
+
+예제 풀어보기
+
+1. wordcount를 실행해보자(pg63)
+
+   > - hadoop fs -put conf/hadoop-env.sh  conf/hadoop-env.sh
+   > - hadoop jar hadoop-examples-*.jar wordcount conf/hadoop-env.sh wordcount_output
+   > - hadoop fs -cat wordcount_output/part-r-00000
+
+2. /boot 폴더에 있는 파일을 hadoop 시스템에 put, get
+
+3. 모니터링 시스템을 통해 각 시스템의 상황을 모니터링 하기
+
+***
+
+server1을 이용하여 각 컴퓨터를 셋팅 한다.
+
+1. 브릿지를 이용하여 IP 셋팅
+2. namenode, second namenode(datanode), datanode1, datanode2
+3. 대용량 파일 입력과 wordcloud를 실행해본다. 
+
+
+
+***
+
+### HIVE 설치하기
+
+> hive의 메타 데이터를 저장해줄 공간 마련을 위해 MariaDB(MySQL)을 설치해준다.
+
+1. yum -y remove mariadb-libs
+2. yum -y localinstall Maria*
+3. systemctl restart mysql
+4.  systemctl status mysql
+5. chkconfig mysql on
+6. firewall-config
+7. mysqladmin -u root password '111111'
+8. mysql -u root -p
+9. mysql -u hive -p
+10. tar xvf apache-hive-1.0.1-bin.tar.gz 
+11. cp -r apache-hive-1.0.1-bin /usr/local/hive
+
+12. vi /etc/profile
+
+    > ```
+    > JAVA_HOME=/usr/local/jdk1.8.0
+    > CLASSPATH=$JAVA_HOME/lib
+    > HADOOP_HOME=/usr/local/hadoop-1.2.1
+    > HIVE_HOME=/usr/local/hive
+    > 
+    > PATH=.:$JAVA_HOME/bin:$HADOOP_HOME/bin:$HIVE_HOME/bin:$PATH
+    > 
+    > export JAVA_HOME CLASSPATH HADOOP_HOME HIVE_HOME
+    > export PATH USER LOGNAME MAIL HOSTNAME HISTSIZE HISTCONTROL
+    > ```
+
+13. reboot
+
+
+
+14. mysql -u root -p(mysql 접속)
+
+
+
+
+
+- grant all privileges on *.* to 'hive'@'localhost' identified by '111111';
+
+
+
+- create database hive_db;
+
+
+
+- grant all privileges on hive_db.* to 'hive'@'localhost' identified by '111111';
+
+
+
+- grant all privileges on hive_db.* to 'hive'@'%'  identified by '111111' with grant option;
+
+
+
+- http://apache.tt.co.kr/hive/hive-1.2.2/apache-hive-1.2.2-bin.tar.gz
+
+  > hive 파일 다운받을 수 있는 곳
+
+
+
+- hive config 
+
+- vi hive-site.xml
+
+  > 없어서 파일 새로 만든것 
+  >
+  > 밑에는 이 파일에 덧붙일 내용
+
+***
+
+```
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+<configuration>
+    <property>
+        <name>hive.metastore.local</name>
+        <value>true</value>
+        <description>controls whether to connect to remove metastore server or open a new metastore server in Hive Client JVM</description>
+    </property>
+    <property>
+        <name>javax.jdo.option.ConnectionURL</name>
+        <value>jdbc:mariadb://localhost:3306/hive_db?createDatabaseIfNotExist=true</value>
+        <description>JDBC connect string for a JDBC metastore</description>
+    </property>
+    <property>
+        <name>javax.jdo.option.ConnectionDriverName</name>
+        <value>org.mariadb.jdbc.Driver</value>
+        <description>Driver class name for a JDBC metastore</description>
+    </property>
+    <property>
+        <name>javax.jdo.option.ConnectionUserName</name>
+        <value>hive</value>
+        <description>username to use against metastore database</description>
+    </property>
+    <property>
+        <name>javax.jdo.option.ConnectionPassword</name>
+        <value>111111</value>
+        <description>password to use against metastore database</description>
+    </property>
+</configuration>
+```
+
+
+
+***
+
+- xml 파일 수정 후 하둡에 hive가 쓸 공간을 마련해준다.
+
+  
+
+1. cd /usr/local/hive/conf
+2. hadoop dfs -mkdir /tmp
+3. hadoop dfs -mkdir /tmp/hive
+4. hadoop dfs -chmod 777 /tmp
+5. hadoop dfs -mkdir /user/hive/warehouse
+6. hadoop dfs -chmod 777 /user/hive/warehouse
+
+- start-all.sh로 하둡을 실행해 준 후 hive로 로그인
