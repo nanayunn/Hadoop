@@ -1,5 +1,9 @@
 # 하둡과 빅데이터
 
+![hadoop](https://user-images.githubusercontent.com/58680504/79348751-62456080-7f70-11ea-8519-37abe62dfa5a.png)
+![hadoop2](https://user-images.githubusercontent.com/58680504/79348766-66717e00-7f70-11ea-88a5-44984c7d35b0.png)
+
+
 1. 개요 
 
    > **하둡이란?**
